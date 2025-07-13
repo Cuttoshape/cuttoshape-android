@@ -1,5 +1,6 @@
 package com.example.cuttoshapenew.views.authviews
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +25,7 @@ import com.google.gson.JsonObject
 import kotlinx.coroutines.launch
 import retrofit2.HttpException
 
+@SuppressLint("UnusedBoxWithConstraintsScope")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SignupDialog(

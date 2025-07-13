@@ -13,9 +13,11 @@ import retrofit2.http.POST
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody
 import okhttp3.logging.HttpLoggingInterceptor
+import kotlinx.serialization.Serializable
 import retrofit2.http.Multipart
 import retrofit2.http.PUT
 import retrofit2.http.GET
+import retrofit2.http.DELETE
 import retrofit2.http.Part
 import retrofit2.http.Path
 
@@ -185,13 +187,13 @@ data class NewProductRequest(
 )
 data class Product(
     val name: String,
-    val businessId: Int, // Placeholder, adjust as needed
+    val businessId: Int?, // Placeholder, adjust as needed
     val productGenderType: String,
     val options: List<ProductOption>,
     val highPrice: String,
     val lowPrice: String,
     val rating: Int = 0, // Default value
-    val createdBy: Int // Placeholder, adjust as needed
+    val createdBy: Int? // Placeholder, adjust as needed
 )
 
 data class NewProductResponse(
@@ -205,6 +207,84 @@ data class NewProductResponse(
     val highPrice: String,
     val lowPrice: String,
     val createdBy: Int
+)
+
+data class CartItemRequest(
+    val configurations: Map<String, String>,
+    val color: String,
+    val design: String,
+    val fabric: String,
+    val cost: Int,
+    val productId: Int,
+    val userDataId: String,
+    val userId: Int?
+)
+
+data class UserData(
+    val id: Int,
+    val userId: Int,
+    val name: String,
+    val age: Int,
+    val weight: Int,
+    val height: Int,
+    val genderType: String,
+    val data: MeasurementData,
+    val createdAt: String? = null,
+    val createdBy: Int? = null,
+    val updatedAt: String? = null,
+    val updatedBy: Int? = null,
+    val deletedAt: String? = null,
+    val deletedBy: Int? = null
+)
+
+@Serializable
+data class MeasurementData(
+    val head: String,
+    val chest: String,
+    val waist: String,
+    val height: String,
+    val sholder: String,
+    val armLength: String,
+    val legLength: String? = null
+)
+data class Configuration(
+    val color : String,
+    val design : String,
+    val fabric : String,
+)
+
+data class CartItemResponse(
+    val configurations : Configuration,
+    val color : String,
+    val design : String,
+    val fabric : String,
+    val cost : Int,
+    val code: Int,
+    val createdAt : String,
+    val createdBy : Int,
+    val deletedAt : String,
+    val deletedBy : Int,
+    val id : Int,
+    val orderId : Int,
+    val product : Product?,
+    val productId : Int,
+    val updatedAt : String,
+    val updatedBy : Int,
+    val user : User?,
+    val userData : UserData?,
+    val userDataId : Int,
+    val userId : Int,
+
+)
+
+data class CartResponse(
+    val success : String,
+    val data : List<CartItemResponse>?
+)
+
+data class CartDeleteResponse (
+    val success: String,
+    val message: String
 )
 
 
@@ -235,8 +315,20 @@ interface ApiService {
         @Part images: List<MultipartBody.Part>?
     ): NewProductResponse
 
+    @POST("cart-item/{productId}")
+    suspend fun addToCart(
+        @Path("productId") productId: Int?,
+        @Body request: CartItemRequest
+    ): CartResponse
+
     @GET("product/{productId}")
     suspend fun getProductById(@Path("productId") productId: Int): Product
+
+    @GET("cart-item/{userId}")
+    suspend fun getCartItem(@Path("userId") userId: Int?): CartResponse
+
+    @DELETE("cart-item/{id}")
+    suspend fun deleteCartItem(@Path("id") id: Int): CartDeleteResponse
 }
 
 object RetrofitClient {

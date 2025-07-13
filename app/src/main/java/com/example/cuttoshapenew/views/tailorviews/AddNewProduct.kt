@@ -39,6 +39,8 @@ import okhttp3.RequestBody.Companion.toRequestBody // Add this import
 import android.net.Uri
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.graphics.RectangleShape
+import com.example.cuttoshapenew.utils.DataStoreManager
+import kotlinx.coroutines.flow.first
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
 import java.io.File
@@ -447,14 +449,18 @@ fun CreateProductDialog(
                                 }
 
                                 // Create product object
+                                val userId = DataStoreManager.getUserId(context).first()
+                                val business = DataStoreManager.getUserBusiness(context).first()
+
+                                Log.d("Business", business.toString())
                                 val product = Product(
                                     name = productName,
-                                    businessId = 2,
+                                    businessId = business?.id,
                                     productGenderType = gender,
                                     options = options,
                                     highPrice = max.toString(),
                                     lowPrice = min.toString(),
-                                    createdBy = 3
+                                    createdBy = userId?.toIntOrNull()
                                 )
 
                                 // Convert product to JSON string
@@ -492,6 +498,7 @@ fun CreateProductDialog(
                                     productJson = productJson,
                                     images = imageParts
                                 )
+
                                 snackbarHostState.showSnackbar("Product created! Code: ${response.code}")
                                 onDismiss()
                             } catch (e: Exception) {

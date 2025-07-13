@@ -200,6 +200,7 @@ fun UserProfileScreen(navController: NavController) {
                             DataStoreManager.saveAuthData(
                                 context,
                                 DataStoreManager.getToken(context).first() ?: "",
+                                "TAILOR",
                                 User(
                                     id = userId!!,
                                     email = email,

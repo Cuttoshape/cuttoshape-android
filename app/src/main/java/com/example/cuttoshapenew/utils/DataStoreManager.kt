@@ -10,11 +10,14 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.example.cuttoshapenew.apiclients.Business
 import com.google.gson.Gson
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 
 val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "auth_prefs")
 
 object DataStoreManager {
     private val TOKEN_KEY = stringPreferencesKey("token")
+    private val ROLE_KEY = stringPreferencesKey("role")
     private val USER_ID_KEY = stringPreferencesKey("user_id")
     private val USER_EMAIL_KEY = stringPreferencesKey("user_email")
     private val USER_FIRST_NAME_KEY = stringPreferencesKey("user_first_name")
@@ -27,9 +30,10 @@ object DataStoreManager {
     private val USER_BUSINESS_KEY = stringPreferencesKey("user_business")
 
     private val gson = Gson()
-    suspend fun saveAuthData(context: Context, token: String, user: com.example.cuttoshapenew.apiclients.User) {
+    suspend fun saveAuthData(context: Context, token: String, role: String, user: com.example.cuttoshapenew.apiclients.User) {
         context.dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = token
+            prefs[ROLE_KEY] = role
             prefs[USER_ID_KEY] = user.id.toString()
             prefs[USER_EMAIL_KEY] = user.email
             prefs[USER_FIRST_NAME_KEY] = user.firstName
@@ -48,6 +52,11 @@ object DataStoreManager {
         return context.dataStore.data.map { prefs ->
             prefs[TOKEN_KEY]
         }
+    }
+
+
+    fun getRole(context: Context): String? = runBlocking {
+        context.dataStore.data.first()[ROLE_KEY].toString()
     }
 
     fun getUserEmail(context: Context): Flow<String?> {
@@ -99,6 +108,7 @@ object DataStoreManager {
         val businessJson = prefs[USER_BUSINESS_KEY]
         if (!businessJson.isNullOrEmpty()) {
             gson.fromJson(businessJson, Business::class.java)
+
         } else {
             null
         }

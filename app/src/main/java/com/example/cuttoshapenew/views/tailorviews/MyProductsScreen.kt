@@ -62,13 +62,13 @@ fun MyProductsScreen(navController: NavController, onAddNewProductClick: () -> U
                         "condition_type" to "eq" // Equals condition
                     )),
                     page = 1,
-                    limit = 10
+                    limit = 360
                 )
                 val response = RetrofitClient.getClient(context).getProducts(request)
 
                 // Filter products by createdBy client-side if server filter doesn't work
                 products = response.products.filter {
-                    it.business.owner.id == (userId?.toIntOrNull() ?: 0)
+                    it.createdBy == userId?.toIntOrNull()
                 }
 
             } catch (e: Exception) {

@@ -5,3 +5,9 @@ plugins {
     alias(libs.plugins.kotlin.compose) apply false
 
 }
+
+buildscript {
+    dependencies {
+        classpath (libs.hilt.android.gradle.plugin)
+    }
+}

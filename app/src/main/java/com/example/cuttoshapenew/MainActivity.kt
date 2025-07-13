@@ -6,6 +6,8 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -30,7 +32,6 @@ import com.example.cuttoshapenew.views.authviews.ProfileScreen
 import com.example.cuttoshapenew.views.customerviews.product.ProductScreen
 import com.example.cuttoshapenew.views.authviews.LoginDialog
 import com.example.cuttoshapenew.views.authviews.SignupDialog
-//import com.example.cuttoshapenew.views.tailorviews.AddProductDialog
 import com.example.cuttoshapenew.views.tailorviews.BusinessRegistrationScreen
 import com.example.cuttoshapenew.views.tailorviews.UserProfileScreen
 import com.example.cuttoshapenew.views.customerviews.product.ProductDetailScreen
@@ -39,10 +40,14 @@ import com.example.cuttoshapenew.views.tailorviews.DashboardScreen
 import com.example.cuttoshapenew.views.tailorviews.MyProductsScreen
 import com.example.cuttoshapenew.ui.theme.CuttoshapenewTheme
 import com.example.cuttoshapenew.utils.DataStoreManager
-import kotlinx.coroutines.flow.collectLatest
 import com.example.cuttoshapenew.utils.DataStoreManager.clearAuthData
+import com.example.cuttoshapenew.views.customerviews.cart.CartScreen
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,10 +69,14 @@ fun TailoringApp() {
     val buttonColor = Color(0xFF4A90E2)
     val context = LocalContext.current
     var isLoggedIn by remember { mutableStateOf(false) }
+    var userRole by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
-        DataStoreManager.getToken(context).collectLatest { token ->
-            isLoggedIn = token != null
+        launch {
+            DataStoreManager.getToken(context).collectLatest { token ->
+                isLoggedIn = token != null
+                userRole = DataStoreManager.getRole(context)
+            }
         }
     }
 
@@ -75,65 +84,81 @@ fun TailoringApp() {
     val scope = rememberCoroutineScope()
 
     val navigationItems = listOf(
-        NavigationItem(
-            route = "dashboard",
-            label = "Dashboard",
-            icon = Icons.Default.DateRange
-        ),
-        NavigationItem(
-            route = "myproduct",
-            label = "My Products",
-            icon = Icons.Default.ShoppingCart
-        ),
-        NavigationItem(
-            route = "quotation",
-            label = "Quotation",
-            icon = Icons.Default.Info
-        ),
-        NavigationItem(
-            route = "message",
-            label = "Message",
-            icon = Icons.Default.Email
-        ),
-        NavigationItem(
-            route = "transaction",
-            label = "Transactions",
-            icon = Icons.Default.DateRange
-        ),
-        NavigationItem(
-            route = "business_profile",
-            label = "Business Profile",
-            icon = Icons.Default.Create
-        ),
-        NavigationItem(
-            route = "userProfile",
-            label = "User Profile",
-            icon = Icons.Default.Person
-        ),
-        NavigationItem(
-            route = "logout",
-            label = "Logout",
-            icon = Icons.Default.ExitToApp
-        )
+        NavigationItem("dashboard", "Dashboard", Icons.Default.DateRange),
+        NavigationItem("myproduct", "My Products", Icons.Default.ShoppingCart),
+        NavigationItem("quotation", "Quotation", Icons.Default.Info),
+        NavigationItem("message", "Message", Icons.Default.Email),
+        NavigationItem("transaction", "Transactions", Icons.Default.DateRange),
+        NavigationItem("business_profile", "Business Profile", Icons.Default.Create),
+        NavigationItem("userProfile", "User Profile", Icons.Default.Person),
+        NavigationItem("logout", "Logout", Icons.Default.ExitToApp)
     )
 
-    ModalNavigationDrawer(
-        drawerState = drawerState,
-        drawerContent = {
-            DrawerContent(
+    if (isLoggedIn && userRole == "TAILOR") {
+        ModalNavigationDrawer(
+            drawerState = drawerState,
+            drawerContent = { DrawerContent(navController, drawerState, navigationItems) }
+        ) {
+            TailoringAppContent(
                 navController = navController,
-                drawerState = drawerState,
-                items = navigationItems
+                showLoginDialog = showLoginDialog,
+                showSignUpDialog = showSignUpDialog,
+                showAddNewProductDialog = showAddNewProductDialog,
+                onLoginDialogToggle = { showLoginDialog = it },
+                onSignUpDialogToggle = { showSignUpDialog = it },
+                onAddNewProductDialogToggle = { showAddNewProductDialog = it },
+                buttonColor = buttonColor,
+                context = context,
+                isLoggedIn = isLoggedIn,
+                userRole = userRole,
+                scope = scope,
+                drawerState = drawerState
             )
         }
-    ) {
-        Scaffold(
-            topBar = {
-                TopAppBar(
-                    title = { Text("Market Place", fontWeight = FontWeight.Bold) },
-                    navigationIcon = {
+    } else {
+        TailoringAppContent(
+            navController = navController,
+            showLoginDialog = showLoginDialog,
+            showSignUpDialog = showSignUpDialog,
+            showAddNewProductDialog = showAddNewProductDialog,
+            onLoginDialogToggle = { showLoginDialog = it },
+            onSignUpDialogToggle = { showSignUpDialog = it },
+            onAddNewProductDialogToggle = { showAddNewProductDialog = it },
+            buttonColor = buttonColor,
+            context = context,
+            isLoggedIn = isLoggedIn,
+            userRole = userRole,
+            scope = scope,
+            drawerState = drawerState
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TailoringAppContent(
+    navController: NavHostController,
+    showLoginDialog: Boolean,
+    showSignUpDialog: Boolean,
+    showAddNewProductDialog: Boolean,
+    onLoginDialogToggle: (Boolean) -> Unit,
+    onSignUpDialogToggle: (Boolean) -> Unit,
+    onAddNewProductDialogToggle: (Boolean) -> Unit,
+    buttonColor: Color,
+    context: android.content.Context,
+    isLoggedIn: Boolean,
+    userRole: String?,
+    scope: CoroutineScope,
+    drawerState: DrawerState
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Market Place", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    if (isLoggedIn && userRole == "TAILOR") {
                         IconButton(
-                            onClick = { if (isLoggedIn) scope.launch { drawerState.open() } },
+                            onClick = { scope.launch { drawerState.open() } },
                             enabled = isLoggedIn
                         ) {
                             Icon(
@@ -142,29 +167,29 @@ fun TailoringApp() {
                                 tint = buttonColor
                             )
                         }
-                    },
-                    actions = {
-                        if (isLoggedIn) {
-                            IconButton(onClick = {  }) {
-                                Icon(Icons.Outlined.Notifications, contentDescription = "Notifications", tint = buttonColor)
-                            }
-                        } else {
-                            IconButton(
-                                onClick = {
-                                    showLoginDialog = true
-                                }
-                            ) {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = "Profile",
-                                    tint = buttonColor
-                                )
-                            }
+                    }
+                },
+                actions = {
+                    if (isLoggedIn) {
+                        IconButton(onClick = { /* Handle notifications */ }) {
+                            Icon(Icons.Outlined.Notifications, contentDescription = "Notifications", tint = buttonColor)
+                        }
+                    } else {
+                        IconButton(
+                            onClick = { onLoginDialogToggle(true) }
+                        ) {
+                            Icon(
+                                Icons.Default.Person,
+                                contentDescription = "Profile",
+                                tint = buttonColor
+                            )
                         }
                     }
-                )
-            },
-            bottomBar = {
+                }
+            )
+        },
+        bottomBar = {
+            if (isLoggedIn && userRole == "CUSTOMER") {
                 NavigationBar {
                     NavigationBarItem(
                         icon = { Icon(Icons.Default.Home, contentDescription = "Market Place", tint = buttonColor) },
@@ -212,88 +237,72 @@ fun TailoringApp() {
                     )
                 }
             }
-        ) { innerPadding ->
-            NavHost(
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = "marketplace",
+            modifier = Modifier.padding(innerPadding)
+        ) {
+            composable("marketplace") { ProductScreen(navController) }
+            composable("productDetail/{productId}") { backStackEntry ->
+                val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
+                ProductDetailScreen(productId, navController)
+            }
+            composable("cart") { CartScreen(navController) }
+            composable("order") { /* OrderScreen() */ }
+            composable("chat") { /* ChatScreen() */ }
+            composable("profile") { ProfileScreen() }
+            composable("business_registration") { BusinessRegistrationScreen(navController) }
+            composable("userProfile") { UserProfileScreen(navController = navController) }
+            composable("business_profile") { BusinessProfileScreen(navController) }
+            composable("dashboard") { DashboardScreen(navController) }
+            composable("myproduct") {
+                MyProductsScreen(navController, onAddNewProductClick = {
+                    onAddNewProductDialogToggle(true)
+                })
+            }
+            composable("quotation") {
+                Text("Quotation Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
+            }
+            composable("message") {
+                Text("Message Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
+            }
+            composable("transaction") {
+                Text("Transactions Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
+            }
+            composable("logout") {
+                LaunchedEffect(Unit) {
+                    clearAuthData(context)
+                    navController.navigate("marketplace") {
+                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                        launchSingleTop = true
+                    }
+                }
+            }
+        }
+        if (showLoginDialog) {
+            LoginDialog(
+                onDismiss = { onLoginDialogToggle(false) },
                 navController = navController,
-                startDestination = "marketplace",
-                modifier = Modifier.padding(innerPadding)
-            ) {
-                composable("marketplace") { ProductScreen(navController) }
-                composable("productDetail/{productId}") { backStackEntry ->
-                    val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
-                    ProductDetailScreen(productId, navController) // Define this composable
+                onSignUpClick = {
+                    onSignUpDialogToggle(true)
+                    onLoginDialogToggle(false)
                 }
-                composable("cart") { /* CartScreen() */ }
-                composable("order") { /* OrderScreen() */ }
-                composable("chat") { /* ChatScreen() */ }
-                composable("profile") { ProfileScreen() }
-                composable("business_registration") { BusinessRegistrationScreen(navController) }
-                composable("userProfile") {
-                    UserProfileScreen(navController = navController)
+            )
+        }
+        if (showSignUpDialog) {
+            SignupDialog(
+                onDismiss = { onSignUpDialogToggle(false) },
+                onLoginClick = {
+                    onLoginDialogToggle(true)
+                    onSignUpDialogToggle(false)
+                },
+                onSignupSuccess = {
+                    onSignUpDialogToggle(false)
+                    onLoginDialogToggle(true)
                 }
-                composable("business_profile") {
-                    BusinessProfileScreen(navController)
-                }
-                composable("dashboard") {
-                    DashboardScreen(navController)
-                }
-                composable("myproduct") {
-                    MyProductsScreen(navController, onAddNewProductClick = {
-                        showAddNewProductDialog = true
-                    } )
-                }
-                composable("quotation") {
-                    // Implement Quotation screen
-                    Text("Quotation Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
-                }
-                composable("message") {
-                    // Implement Message screen
-                    Text("Message Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
-                }
-                composable("transaction") {
-                    // Implement Transactions screen
-                    Text("Transactions Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
-                }
-                composable("logout") {
-                    LaunchedEffect(Unit) {
-                        clearAuthData(context)
-                        navController.navigate("marketplace") {
-                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                            launchSingleTop = true
-                        }
-                    }
-                }
-            }
-            if (showLoginDialog) {
-                LoginDialog(
-                    onDismiss = { showLoginDialog = false },
-                    navController = navController,
-                    onSignUpClick = {
-                        showSignUpDialog = true
-                        showLoginDialog = false
-                    }
-                )
-            }
-            if (showSignUpDialog) {
-                SignupDialog(
-                    onDismiss = { showSignUpDialog = false },
-                    onLoginClick = {
-                        showLoginDialog = true
-                        showSignUpDialog = false
-                    },
-                    onSignupSuccess = {
-                        showSignUpDialog = false
-                        showLoginDialog = true
-                    }
-                )
-            }
-//            if (showAddNewProductDialog) {
-//                AddProductDialog(
-//                    onDismiss = { showAddNewProductDialog = false },
-//
-//                )
-//            }
-
+            )
         }
     }
 }

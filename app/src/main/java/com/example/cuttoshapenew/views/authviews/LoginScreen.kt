@@ -122,7 +122,7 @@ fun LoginDialog(
                                         val request = LoginRequest(email = email, password = password)
                                         val response = RetrofitClient.getClient(context).login(request)
                                         // Store token and user data
-                                        DataStoreManager.saveAuthData(context, response.token, response.user)
+                                        DataStoreManager.saveAuthData(context, response.token, response.user.userType, response.user)
                                         val userType = response.user.userType
 
                                         if (userType.uppercase() == "TAILOR") {

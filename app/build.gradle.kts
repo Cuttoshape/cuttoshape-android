@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id ("dagger.hilt.android.plugin")
+    id ("kotlin-kapt")
 
 }
 
@@ -57,6 +59,15 @@ dependencies {
     implementation (libs.androidx.runtime.livedata)
     implementation (libs.androidx.runtime)
     implementation ("androidx.compose.ui:ui:1.8.2") // For Modifier and clip
+    implementation (libs.ktor.client.core)
+    implementation (libs.ktor.client.cio) // For JVM client
+    implementation (libs.ktor.client.content.negotiation)
+    // Hilt
+    implementation (libs.hilt.android)
+    kapt (libs.hilt.android.compiler)
+// Hilt for Compose
+    implementation (libs.androidx.hilt.navigation.compose)
+    implementation (libs.ktor.serialization.kotlinx.json)
     implementation (libs.androidx.foundation.v160)
     implementation(libs.volley)
     testImplementation(libs.junit)
