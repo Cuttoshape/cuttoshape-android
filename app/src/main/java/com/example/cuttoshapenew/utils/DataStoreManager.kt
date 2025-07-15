@@ -9,6 +9,7 @@ import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 import com.example.cuttoshapenew.apiclients.Business
+import com.example.cuttoshapenew.apiclients.User
 import com.google.gson.Gson
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -18,6 +19,7 @@ val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "au
 object DataStoreManager {
     private val TOKEN_KEY = stringPreferencesKey("token")
     private val ROLE_KEY = stringPreferencesKey("role")
+    private val USER_KEY = stringPreferencesKey("user")
     private val USER_ID_KEY = stringPreferencesKey("user_id")
     private val USER_EMAIL_KEY = stringPreferencesKey("user_email")
     private val USER_FIRST_NAME_KEY = stringPreferencesKey("user_first_name")
@@ -34,6 +36,7 @@ object DataStoreManager {
         context.dataStore.edit { prefs ->
             prefs[TOKEN_KEY] = token
             prefs[ROLE_KEY] = role
+            prefs[USER_KEY] = if (user != null) gson.toJson(user) else ""
             prefs[USER_ID_KEY] = user.id.toString()
             prefs[USER_EMAIL_KEY] = user.email
             prefs[USER_FIRST_NAME_KEY] = user.firstName
@@ -102,6 +105,16 @@ object DataStoreManager {
 
     fun getUserCountry(context: Context): Flow<String?> = context.dataStore.data.map { prefs ->
         prefs[USER_COUNTRY_KEY]
+    }
+
+    fun getUser(context: Context): Flow<User?> = context.dataStore.data.map { prefs ->
+        val userJson = prefs[USER_KEY]
+        if (!userJson.isNullOrEmpty()) {
+            gson.fromJson(userJson, User::class.java)
+
+        } else {
+            null
+        }
     }
 
     fun getUserBusiness(context: Context): Flow<Business?> = context.dataStore.data.map { prefs ->

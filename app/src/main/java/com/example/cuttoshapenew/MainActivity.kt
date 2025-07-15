@@ -1,8 +1,10 @@
 package com.example.cuttoshapenew
 
+import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -42,6 +44,8 @@ import com.example.cuttoshapenew.ui.theme.CuttoshapenewTheme
 import com.example.cuttoshapenew.utils.DataStoreManager
 import com.example.cuttoshapenew.utils.DataStoreManager.clearAuthData
 import com.example.cuttoshapenew.views.customerviews.cart.CartScreen
+import com.example.cuttoshapenew.views.customerviews.order.OrderScreen
+import com.example.cuttoshapenew.views.customerviews.order.OrderDetailsScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -134,6 +138,7 @@ fun TailoringApp() {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TailoringAppContent(
@@ -250,7 +255,12 @@ fun TailoringAppContent(
                 ProductDetailScreen(productId, navController)
             }
             composable("cart") { CartScreen(navController) }
-            composable("order") { /* OrderScreen() */ }
+            composable("order") { OrderScreen(navController) } // Updated to use OrderScreen
+            composable("orderDetails/{orderId}/{buyerId}") { backStackEntry ->
+                val orderId = backStackEntry.arguments?.getString("orderId")?.toIntOrNull() ?: 0
+                val buyerId = backStackEntry.arguments?.getString("buyerId")?.toIntOrNull() ?: 0
+                OrderDetailsScreen(navController, orderId, buyerId)
+            }
             composable("chat") { /* ChatScreen() */ }
             composable("profile") { ProfileScreen() }
             composable("business_registration") { BusinessRegistrationScreen(navController) }

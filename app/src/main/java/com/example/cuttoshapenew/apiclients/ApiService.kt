@@ -31,6 +31,7 @@ data class LoginRequest(
 data class LoginResponse(
     val token: String,
     val user: User
+
 )
 
 data class Business(
@@ -78,7 +79,7 @@ data class User(
     val business: Business?,
     val bodyData: List<Any>,
     val shippingAddresses: List<Any>,
-    val cartItems: List<Any>
+    val cartItems: List<CartItemResponse>
 )
 
 // Data class for the request body
@@ -287,6 +288,63 @@ data class CartDeleteResponse (
     val message: String
 )
 
+data class Order(
+    val id: Int,
+    val orderNumber: String,
+    val createdAt: String,
+    val buyerName: String,
+    val itemCount: Int,
+    val status: String,
+    val quotations: List<Quotation>
+)
+
+data class OrderFilterRequest(
+    val isListing: Boolean,
+    val isDetail : Boolean,
+    val limit: Int,
+    val orderFilter: List<Filter>,
+    val page: Int,
+    val quotationFilter: List<Any>
+)
+
+data class Filter(
+    val field: String,
+    val value: Int?,
+    val condition: String
+)
+
+data class OrderFilterResponse(
+    val totalItems: Int,
+    val totalPages: Int,
+    val currentPage: Int,
+    val rows: List<Order>
+)
+
+data class OrderResponse(
+    val totalItems: Int,
+    val totalPages: Int,
+    val currentPage: Int,
+    val newRows: List<Order>
+)
+
+data class Quotation(
+    val id: Int,
+    val itemId: Int,
+    val productImage: String,
+    val productName: String,
+    val sellerId: Int,
+    val cartItemId: Int,
+    val cost: Int,
+    val status: String,
+    val configurations: Map<String, String>,
+    val userData: Any?,
+    val createdAt: String,
+    val updatedAt: String,
+    val shippingDetails: String?,
+    val shippingCost: Int
+)
+
+
 
 
 interface ApiService {
@@ -329,6 +387,12 @@ interface ApiService {
 
     @DELETE("cart-item/{id}")
     suspend fun deleteCartItem(@Path("id") id: Int): CartDeleteResponse
+
+    @POST("order/filter")
+    suspend fun getOrders(@Body request: OrderFilterRequest): OrderFilterResponse
+
+    @POST("order/filter")
+    suspend fun getOrderDetails(@Body request: OrderFilterRequest): OrderResponse
 }
 
 object RetrofitClient {
