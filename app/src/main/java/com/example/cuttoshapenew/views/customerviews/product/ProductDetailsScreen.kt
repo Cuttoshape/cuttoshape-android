@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberAsyncImagePainter
+import com.example.cuttoshapenew.apiclients.MeasurementResponse
 import com.example.cuttoshapenew.apiclients.RetrofitClient
 import com.example.cuttoshapenew.utils.DataStoreManager
 import com.google.gson.Gson
@@ -60,7 +61,8 @@ fun ProductDetailScreen(productId: Int?, navController: NavController) {
     // State to control description bottom sheet visibility
     var showDescriptionSheet by remember { mutableStateOf(false) }
     val descriptionSheetState = rememberModalBottomSheetState()
-
+    var isLoadingMeasurement by remember { mutableStateOf(true) }
+    var errorMessageMeasurement by remember { mutableStateOf<String?>(null) }
     // State to control add to cart bottom sheet visibility
     var showAddToCartSheet by remember { mutableStateOf(false) }
     val addToCartSheetState = rememberModalBottomSheetState()
@@ -69,10 +71,11 @@ fun ProductDetailScreen(productId: Int?, navController: NavController) {
     var selectedColor by remember { mutableStateOf<String?>(null) }
     var selectedFabric by remember { mutableStateOf<String?>(null) }
     var selectedDesign by remember { mutableStateOf<String?>(null) }
-
+    var selectedUser by remember { mutableStateOf<String?>(null) }
+    var measurements by remember { mutableStateOf<List<MeasurementResponse>>(emptyList()) }
     // State for submit result
     var submitResult by remember { mutableStateOf<String?>(null) }
-
+    var userId by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
 
     // HTTP Client setup
@@ -93,6 +96,18 @@ fun ProductDetailScreen(productId: Int?, navController: NavController) {
     LaunchedEffect(productId) {
         viewModel.fetchProduct(productId, context)
     }
+
+    LaunchedEffect(Unit) {
+        userId = DataStoreManager.getUserId(context).first()
+        try {
+            measurements = RetrofitClient.getClient(context).getMeasurements(userId.toString())
+        } catch (e: Exception) {
+            errorMessageMeasurement = "Failed to load measurements: ${e.message}"
+        } finally {
+            isLoadingMeasurement = false
+        }
+    }
+
 
     Scaffold { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
@@ -323,7 +338,6 @@ fun ProductDetailScreen(productId: Int?, navController: NavController) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(bottom = 60.dp)
             ) {
                 // Title
                 Text(
@@ -581,6 +595,88 @@ fun ProductDetailScreen(productId: Int?, navController: NavController) {
                     }
                 }
 
+                // User Measurement
+                Text(
+                    text = "User",
+                    fontSize = 20.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = Color.Gray,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(Alignment.CenterHorizontally)
+                        .padding(bottom = 8.dp)
+                )
+
+                var userExpanded by remember { mutableStateOf(false) }
+                if (measurements.isNotEmpty()) {
+                    ExposedDropdownMenuBox(
+                        expanded = userExpanded,
+                        onExpandedChange = { userExpanded = !userExpanded }
+                    ) {
+                        TextField(
+                            value = selectedUser ?: "",
+                            onValueChange = {},
+                            readOnly = true,
+                            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = userExpanded) },
+                            modifier = Modifier
+                                .menuAnchor()
+                                .fillMaxWidth()
+                                .padding(bottom = 8.dp, start = 16.dp, end = 16.dp),
+                            colors = TextFieldDefaults.colors(
+                                focusedContainerColor = Color(0xFFF5F4F9),
+                                unfocusedContainerColor = Color(0xFFF5F4F9),
+                                focusedTextColor = buttonColor,
+                                unfocusedTextColor = buttonColor,
+                                focusedLabelColor = Color.White,
+                                unfocusedLabelColor = Color.Black.copy(alpha = 0.5f),
+                                cursorColor = Color.White,
+                                focusedIndicatorColor = Color.Transparent,
+                                unfocusedIndicatorColor = Color.Transparent
+                            )
+                        )
+                        ExposedDropdownMenu(
+                            expanded = userExpanded,
+                            onDismissRequest = { userExpanded = false },
+                            modifier = Modifier
+                                .background(Color.White)
+                                .clip(RoundedCornerShape(45.dp))
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        ) {
+                            measurements.forEachIndexed { index, user ->
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 8.dp)
+                                ) {
+                                    DropdownMenuItem(
+                                        text = {
+                                            Text(
+                                                text = user.name,
+                                                color = Color.Black,
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .wrapContentWidth(Alignment.CenterHorizontally)
+                                            )
+                                        },
+                                        onClick = {
+                                            selectedUser = user.id.toString()
+                                            userExpanded = false
+                                        }
+                                    )
+                                    if (index < measurements.size - 1) {
+                                        Divider(
+                                            color = Color.LightGray,
+                                            thickness = 1.dp,
+                                            modifier = Modifier.padding(horizontal = 16.dp)
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
                 // Action Buttons
                 Row(
                     modifier = Modifier
@@ -613,7 +709,7 @@ fun ProductDetailScreen(productId: Int?, navController: NavController) {
                                     fabric = selectedFabric ?: "",
                                     cost = 120, // Hardcoded as per example, replace with dynamic value if needed
                                     productId = productId ?: 8, // Use productId or default to 8
-                                    userDataId = "3", // Hardcoded as per example, replace with dynamic value if needed
+                                    userDataId = selectedUser ?: "", // Hardcoded as per example, replace with dynamic value if needed
                                     userId = userId?.toIntOrNull()
                                 )
                                 try {
@@ -642,7 +738,7 @@ fun ProductDetailScreen(productId: Int?, navController: NavController) {
                                         }
                                         else -> "Add Cart failed: ${e.localizedMessage ?: "Unknown error"}"
                                     }
-                                    Log.e("Add Cart", "Error: ${e.message}", e)
+                                    Log.e("Add Cart", "Error: $e", e)
                                 } finally {
                                     isLoadingCart = false
                                 }

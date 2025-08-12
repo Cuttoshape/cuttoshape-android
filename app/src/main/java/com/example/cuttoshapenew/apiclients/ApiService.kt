@@ -3,6 +3,7 @@ package com.example.cuttoshapenew.apiclients
 import com.example.cuttoshapenew.model.ProductResponse
 import com.example.cuttoshapenew.model.Product
 import com.example.cuttoshapenew.utils.DataStoreManager
+import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.MultipartBody
@@ -20,6 +21,7 @@ import retrofit2.http.GET
 import retrofit2.http.DELETE
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 // Data class for the login request body
 data class LoginRequest(
@@ -31,7 +33,6 @@ data class LoginRequest(
 data class LoginResponse(
     val token: String,
     val user: User
-
 )
 
 data class Business(
@@ -249,41 +250,45 @@ data class MeasurementData(
     val legLength: String? = null
 )
 data class Configuration(
-    val color : String,
-    val design : String,
-    val fabric : String,
+    val color: String,
+    val design: String,
+    val fabric: String,
 )
 
 data class CartItemResponse(
-    val configurations : Configuration,
-    val color : String,
-    val design : String,
-    val fabric : String,
-    val cost : Int,
+    val configurations: Configuration,
+    val color: String,
+    val design: String,
+    val fabric: String,
+    val cost: Int,
     val code: Int,
-    val createdAt : String,
-    val createdBy : Int,
-    val deletedAt : String,
-    val deletedBy : Int,
-    val id : Int,
-    val orderId : Int,
-    val product : Product?,
-    val productId : Int,
-    val updatedAt : String,
-    val updatedBy : Int,
-    val user : User?,
-    val userData : UserData?,
-    val userDataId : Int,
-    val userId : Int,
-
+    val createdAt: String,
+    val createdBy: Int,
+    val deletedAt: String,
+    val deletedBy: Int,
+    val id: Int,
+    val orderId: Int,
+    val product: Product?,
+    val productId: Int,
+    val updatedAt: String,
+    val updatedBy: Int,
+    val user: User?,
+    val userData: UserData?,
+    val userDataId: Int,
+    val userId: Int,
 )
 
 data class CartResponse(
-    val success : String,
-    val data : List<CartItemResponse>?
+    val success: String,
+    val data: List<CartItemResponse>?
 )
 
-data class CartDeleteResponse (
+data class AddCartResponse(
+    val success: String,
+    val data: CartItemResponse?
+)
+
+data class CartDeleteResponse(
     val success: String,
     val message: String
 )
@@ -300,7 +305,7 @@ data class Order(
 
 data class OrderFilterRequest(
     val isListing: Boolean,
-    val isDetail : Boolean,
+    val isDetail: Boolean,
     val limit: Int,
     val orderFilter: List<Filter>,
     val page: Int,
@@ -340,12 +345,146 @@ data class Quotation(
     val userData: Any?,
     val createdAt: String,
     val updatedAt: String,
-    val shippingDetails: String?,
+    val shippingDetails: ShippingAddress?,
     val shippingCost: Int
 )
 
+data class MeasurementResponse(
+    val id: Any,
+    val userId: Any,
+    val name: String,
+    val age: Int,
+    val weight: Int,
+    val height: String,
+    val data: Data,
+    val genderType: String,
+    val createdAt: String,
+    val createdBy: String?,
+    val updatedAt: String,
+    val updatedBy: String?,
+    val deletedAt: String?,
+    val deletedBy: String?
+)
 
+data class MeasurementRequest(
+    val userId: Any,
+    val name: String,
+    val age: Int,
+    val weight: Int,
+    val height: String,
+    val data: Data,
+    val genderType: String,
+)
 
+data class Data (
+    val Head: String,
+    val Chest: String,
+    val Waist: String,
+    val Height: String,
+    val Sholder: String,
+    @SerializedName("Arm length")
+    val armLength: String,
+    @SerializedName("Leg length")
+    val legLength: String
+)
+
+data class Measurement(
+    val id: String,
+    val userId: String,
+    val value: String,
+    val date: String
+)
+
+data class ShippingAddress(
+    val id : String,
+    val userId : String,
+    val address : String,
+    val city : String,
+    val state : String,
+    val zipCode : String,
+    val country : String,
+    val createdAt : String,
+    val createdBy : String,
+    val updatedAt : String,
+    val updatedBy : String,
+    val deletedAt : String,
+    val deletedBy : String
+)
+
+data class ShipAddressRequest(
+    val address : String,
+    val city : String,
+    val country : String,
+    val state : String,
+    val userId : String,
+    val zipCode : String,
+)
+
+data class MessageResponse(
+
+    val id: String,
+    val email: String,
+    val password: String,
+    val firstName: String,
+    val lastName: String,
+    val userType: String,
+    val photoUrl: String,
+    val address: String,
+    val phone: String,
+    val city: String,
+    val state: String,
+    val zipCode: String,
+    val country: String,
+    val createdAt: String,
+    val createdBy: String,
+    val updatedAt: String,
+    val updatedBy: String,
+    val deletedAt: String,
+    val deletedBy: String,
+    val bodyData: List<MeasurementResponse>
+)
+
+data class ChatContent(
+    val content : String,
+    val productId: String
+)
+
+data class ChatDetails(
+    val id : String,
+    val senderId : String,
+    val receiverId : String,
+    val content: ChatContent,
+    val type: String,
+    val status: String,
+    val createdAt: String,
+    val createdBy: String,
+    val updatedAt: String,
+    val updatedBy: String,
+    val deletedAt: String,
+    val deletedBy: String
+)
+
+data class ChatResponse (
+    val page : Int,
+    val size : Int,
+    val total : Int,
+    val hasMore : Boolean,
+    val rows: List<ChatDetails>
+)
+
+data class PaymentIntentRequest(
+    val cartItems: List<CartItemResponse>,
+    val quotationItems: List<Quotation>? = null,
+    val userId: String,
+    val shipping_options: String
+)
+
+data class PaymentIntentResponse(
+    val paymentIntent: String,
+    val ephemeralKey: String,
+    val customer: String,
+    val publishableKey: String
+)
 
 interface ApiService {
     @POST("product/all")
@@ -377,7 +516,7 @@ interface ApiService {
     suspend fun addToCart(
         @Path("productId") productId: Int?,
         @Body request: CartItemRequest
-    ): CartResponse
+    ): AddCartResponse
 
     @GET("product/{productId}")
     suspend fun getProductById(@Path("productId") productId: Int): Product
@@ -393,10 +532,37 @@ interface ApiService {
 
     @POST("order/filter")
     suspend fun getOrderDetails(@Body request: OrderFilterRequest): OrderResponse
+
+    @GET("body-data/userId/{userId}")
+    suspend fun getMeasurements(@Path("userId") userId: String): List<MeasurementResponse>
+
+    @POST("body-data")
+    suspend fun addMeasurement(@Body measurement: MeasurementRequest): MeasurementResponse
+
+    @PUT("measurements/{id}")
+    suspend fun updateMeasurement(@Body measurement: MeasurementResponse): MeasurementResponse
+
+    @DELETE("measurements/{id}")
+    suspend fun deleteMeasurement(@Path("id") id: String)
+
+    @GET("shipping-address/by-user-id/{id}")
+    suspend fun getShippingAddress(@Path("id") id: String): List<ShippingAddress>
+
+    @POST("shipping-address")
+    suspend fun createShipAddress(@Body shipAddress: ShipAddressRequest): ShippingAddress
+
+    @GET("connection")
+    suspend fun getMessages(@Query("userId") id: String): List<MessageResponse>
+
+    @POST("payment-sheet-intent")
+    suspend fun getPaymentIntent(@Body paymentIntent: PaymentIntentRequest): PaymentIntentResponse
+
+    @GET("message/by-user-id")
+    suspend fun getUserMessageChat(@Query("senderId") senderId: String, @Query("receiverId") receiverId: String, @Query("page") page: String, @Query("size") size: String ): ChatResponse
 }
 
 object RetrofitClient {
-    private const val BASE_URL = "https://backend.cuttoshape.com/" // Replace with your API base URL
+    private const val BASE_URL = "https://backend.cuttoshape.com/" // Matches your endpoint
 
     fun getClient(context: android.content.Context): ApiService {
         val logging = HttpLoggingInterceptor().apply {

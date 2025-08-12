@@ -12,6 +12,10 @@ import android.util.Log
 import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
+import com.example.cuttoshapenew.apiclients.PaymentIntentRequest
+import com.example.cuttoshapenew.apiclients.PaymentIntentResponse
+import com.example.cuttoshapenew.apiclients.ShipAddressRequest
+import com.example.cuttoshapenew.apiclients.ShippingAddress
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -23,6 +27,12 @@ class CartViewModel @Inject constructor(
 ) : ViewModel() {
     private val _cartItems = MutableStateFlow<List<CartItemResponse>>(emptyList())
     val cartItems: StateFlow<List<CartItemResponse>> = _cartItems
+
+    private val _shipAddresses = MutableStateFlow<List<ShippingAddress>>(emptyList())
+    val shipAddresses: StateFlow<List<ShippingAddress>> = _shipAddresses
+
+    private val _paymentIntent = MutableStateFlow<PaymentIntentResponse?>(null)
+    val paymentIntent: StateFlow<PaymentIntentResponse?> = _paymentIntent
 
     private val _isLoading = mutableStateOf(true)
     val isLoading: State<Boolean> = _isLoading
@@ -49,6 +59,58 @@ class CartViewModel @Inject constructor(
             } else {
                 _errorMessage.value = "Failed to load cart: ${response}"
             }
+        } catch (e: Exception) {
+            _errorMessage.value = "Failed to load cart: ${e.message}"
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    internal suspend fun fetchShipAddress() {
+        _isLoading.value = true
+        _errorMessage.value = null
+        val userId = DataStoreManager.getUserId(context).first()
+        try {
+            val response = RetrofitClient.getClient(context).getShippingAddress(userId.toString())
+            Log.d("Response", response.toString())
+
+                val items: List<ShippingAddress>? = response
+                _shipAddresses.value = items ?: emptyList()
+
+        } catch (e: Exception) {
+            _errorMessage.value = "Failed to load cart: ${e.message}"
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    internal suspend fun createShipAddress(shipAddress : ShipAddressRequest) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        try {
+            val response = RetrofitClient.getClient(context).createShipAddress(shipAddress)
+            Log.d("Response", response.toString())
+
+
+            _shipAddresses.value += response
+
+        } catch (e: Exception) {
+            _errorMessage.value = "Failed to load cart: ${e.message}"
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
+    internal suspend fun createPaymentIntent(paymentIntent : PaymentIntentRequest) {
+        _isLoading.value = true
+        _errorMessage.value = null
+
+        try {
+            val response = RetrofitClient.getClient(context).getPaymentIntent(paymentIntent)
+            Log.d("Response", response.toString())
+            _paymentIntent.value = response
+
         } catch (e: Exception) {
             _errorMessage.value = "Failed to load cart: ${e.message}"
         } finally {

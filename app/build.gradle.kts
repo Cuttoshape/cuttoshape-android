@@ -2,9 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
-    id ("dagger.hilt.android.plugin")
-    id ("kotlin-kapt")
-
+    alias(libs.plugins.kotlin.kapt)
+    alias(libs.plugins.hilt.android)
 }
 
 android {
@@ -31,11 +30,11 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = "17"
     }
     buildFeatures {
         compose = true
@@ -59,11 +58,13 @@ dependencies {
     implementation (libs.androidx.runtime.livedata)
     implementation (libs.androidx.runtime)
     implementation ("androidx.compose.ui:ui:1.8.2") // For Modifier and clip
+    implementation(libs.okhttp)
     implementation (libs.ktor.client.core)
     implementation (libs.ktor.client.cio) // For JVM client
     implementation (libs.ktor.client.content.negotiation)
-    // Hilt
+    implementation(libs.json)
     implementation (libs.hilt.android)
+    // Hilt
     kapt (libs.hilt.android.compiler)
 // Hilt for Compose
     implementation (libs.androidx.hilt.navigation.compose)
@@ -88,4 +89,9 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp) // Add this line
     implementation(libs.logging.interceptor.v4120)
+    implementation(libs.stripe.android)
+    // Include the financial connections SDK to support US bank account as a payment method
+    implementation(libs.financial.connections)
+
+
 }

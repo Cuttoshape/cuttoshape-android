@@ -9,6 +9,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -46,10 +47,16 @@ import com.example.cuttoshapenew.utils.DataStoreManager.clearAuthData
 import com.example.cuttoshapenew.views.customerviews.cart.CartScreen
 import com.example.cuttoshapenew.views.customerviews.order.OrderScreen
 import com.example.cuttoshapenew.views.customerviews.order.OrderDetailsScreen
+import com.example.cuttoshapenew.views.tailorviews.order.TailorOrderScreen
+import com.example.cuttoshapenew.views.tailorviews.order.TailorOrderDetailsScreen
+import com.example.cuttoshapenew.views.customerviews.measurement.MeasurementModal
+import com.example.cuttoshapenew.views.tailorviews.Chat.ChatScreen
+import com.example.cuttoshapenew.views.tailorviews.Chat.MessageListScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.flow.first
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -74,12 +81,14 @@ fun TailoringApp() {
     val context = LocalContext.current
     var isLoggedIn by remember { mutableStateOf(false) }
     var userRole by remember { mutableStateOf<String?>(null) }
+    var userId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(Unit) {
         launch {
             DataStoreManager.getToken(context).collectLatest { token ->
                 isLoggedIn = token != null
                 userRole = DataStoreManager.getRole(context)
+                userId = DataStoreManager.getUserId(context).first()
             }
         }
     }
@@ -116,7 +125,8 @@ fun TailoringApp() {
                 isLoggedIn = isLoggedIn,
                 userRole = userRole,
                 scope = scope,
-                drawerState = drawerState
+                drawerState = drawerState,
+                userId = userId.toString()
             )
         }
     } else {
@@ -133,7 +143,8 @@ fun TailoringApp() {
             isLoggedIn = isLoggedIn,
             userRole = userRole,
             scope = scope,
-            drawerState = drawerState
+            drawerState = drawerState,
+            userId = userId.toString()
         )
     }
 }
@@ -154,8 +165,12 @@ fun TailoringAppContent(
     isLoggedIn: Boolean,
     userRole: String?,
     scope: CoroutineScope,
-    drawerState: DrawerState
+    drawerState: DrawerState,
+    userId: String
 ) {
+    var showMeasurementModal by remember { mutableStateOf(false) }
+    val modalSheetState = rememberModalBottomSheetState()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -219,6 +234,14 @@ fun TailoringAppContent(
                         }
                     )
                     NavigationBarItem(
+                        icon = { Icon(Icons.Default.AccountCircle, contentDescription = "Scan", tint = buttonColor) },
+                        label = { Text("Scan") },
+                        selected = navController.currentDestination?.route == "scan",
+                        onClick = {
+                            scope.launch { showMeasurementModal = true; modalSheetState.show() }
+                        }
+                    )
+                    NavigationBarItem(
                         icon = { Icon(Icons.Default.List, contentDescription = "Order", tint = buttonColor) },
                         label = { Text("Order") },
                         selected = navController.currentDestination?.route == "order",
@@ -244,75 +267,99 @@ fun TailoringAppContent(
             }
         }
     ) { innerPadding ->
-        NavHost(
-            navController = navController,
-            startDestination = "marketplace",
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable("marketplace") { ProductScreen(navController) }
-            composable("productDetail/{productId}") { backStackEntry ->
-                val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
-                ProductDetailScreen(productId, navController)
-            }
-            composable("cart") { CartScreen(navController) }
-            composable("order") { OrderScreen(navController) } // Updated to use OrderScreen
-            composable("orderDetails/{orderId}/{buyerId}") { backStackEntry ->
-                val orderId = backStackEntry.arguments?.getString("orderId")?.toIntOrNull() ?: 0
-                val buyerId = backStackEntry.arguments?.getString("buyerId")?.toIntOrNull() ?: 0
-                OrderDetailsScreen(navController, orderId, buyerId)
-            }
-            composable("chat") { /* ChatScreen() */ }
-            composable("profile") { ProfileScreen() }
-            composable("business_registration") { BusinessRegistrationScreen(navController) }
-            composable("userProfile") { UserProfileScreen(navController = navController) }
-            composable("business_profile") { BusinessProfileScreen(navController) }
-            composable("dashboard") { DashboardScreen(navController) }
-            composable("myproduct") {
-                MyProductsScreen(navController, onAddNewProductClick = {
-                    onAddNewProductDialogToggle(true)
-                })
-            }
-            composable("quotation") {
-                Text("Quotation Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
-            }
-            composable("message") {
-                Text("Message Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
-            }
-            composable("transaction") {
-                Text("Transactions Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
-            }
-            composable("logout") {
-                LaunchedEffect(Unit) {
-                    clearAuthData(context)
-                    navController.navigate("marketplace") {
-                        popUpTo(navController.graph.startDestinationId) { inclusive = true }
-                        launchSingleTop = true
+        Box(modifier = Modifier.padding(innerPadding)) {
+            NavHost(
+                navController = navController,
+                startDestination = "marketplace",
+                modifier = Modifier.fillMaxSize()
+            ) {
+                composable("marketplace") { ProductScreen(navController) }
+                composable("productDetail/{productId}") { backStackEntry ->
+                    val productId = backStackEntry.arguments?.getString("productId")?.toIntOrNull()
+                    ProductDetailScreen(productId, navController)
+                }
+                composable("cart") { CartScreen(navController) }
+                composable("order") { OrderScreen(navController) }
+                composable("orderDetails/{orderId}/{buyerId}") { backStackEntry ->
+                    val orderId = backStackEntry.arguments?.getString("orderId")?.toIntOrNull() ?: 0
+                    val buyerId = backStackEntry.arguments?.getString("buyerId")?.toIntOrNull() ?: 0
+                    OrderDetailsScreen(navController, orderId, buyerId)
+                }
+                composable("chat") { /* ChatScreen() */ }
+                composable("profile") { ProfileScreen() }
+                composable("business_registration") { BusinessRegistrationScreen(navController) }
+                composable("userProfile") { UserProfileScreen(navController = navController) }
+                composable("business_profile") { BusinessProfileScreen(navController) }
+                composable("dashboard") { DashboardScreen(navController) }
+                composable("myproduct") {
+                    MyProductsScreen(navController, onAddNewProductClick = {
+                        onAddNewProductDialogToggle(true)
+                    })
+                }
+                composable("quotation") {
+                    TailorOrderScreen( navController)
+                }
+                composable("orderDetails/{orderId}/{buyerId}") { backStackEntry ->
+                    val orderId = backStackEntry.arguments?.getString("orderId")?.toIntOrNull() ?: 0
+                    val buyerId = backStackEntry.arguments?.getString("buyerId")?.toIntOrNull() ?: 0
+                    TailorOrderDetailsScreen(navController, orderId, buyerId)
+                }
+                composable("message") {
+                    MessageListScreen(navController = navController, userId = userId)
+                }
+                composable("chat_screen/{receiverId}") { backStackEntry ->
+                    val receiverId = backStackEntry.arguments?.getString("receiverId") ?: ""
+                    ChatScreen(receiverId = receiverId, userId = userId)
+                }
+                composable("transaction") {
+                    Text("Transactions Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
+                }
+                composable("logout") {
+                    LaunchedEffect(Unit) {
+                        clearAuthData(context)
+                        navController.navigate("marketplace") {
+                            popUpTo(navController.graph.startDestinationId) { inclusive = true }
+                            launchSingleTop = true
+                        }
                     }
                 }
             }
-        }
-        if (showLoginDialog) {
-            LoginDialog(
-                onDismiss = { onLoginDialogToggle(false) },
-                navController = navController,
-                onSignUpClick = {
-                    onSignUpDialogToggle(true)
-                    onLoginDialogToggle(false)
+            if (showMeasurementModal) {
+                ModalBottomSheet(
+                    onDismissRequest = { scope.launch { modalSheetState.hide(); showMeasurementModal = false } },
+                    sheetState = modalSheetState,
+                    shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
+                    containerColor = Color.White
+                ) {
+                    MeasurementModal(
+                        onDismiss = { scope.launch { modalSheetState.hide(); showMeasurementModal = false } },
+                        userId = userId
+                    )
                 }
-            )
-        }
-        if (showSignUpDialog) {
-            SignupDialog(
-                onDismiss = { onSignUpDialogToggle(false) },
-                onLoginClick = {
-                    onLoginDialogToggle(true)
-                    onSignUpDialogToggle(false)
-                },
-                onSignupSuccess = {
-                    onSignUpDialogToggle(false)
-                    onLoginDialogToggle(true)
-                }
-            )
+            }
+            if (showLoginDialog) {
+                LoginDialog(
+                    onDismiss = { onLoginDialogToggle(false) },
+                    navController = navController,
+                    onSignUpClick = {
+                        onSignUpDialogToggle(true)
+                        onLoginDialogToggle(false)
+                    }
+                )
+            }
+            if (showSignUpDialog) {
+                SignupDialog(
+                    onDismiss = { onSignUpDialogToggle(false) },
+                    onLoginClick = {
+                        onLoginDialogToggle(true)
+                        onSignUpDialogToggle(false)
+                    },
+                    onSignupSuccess = {
+                        onSignUpDialogToggle(false)
+                        onLoginDialogToggle(true)
+                    }
+                )
+            }
         }
     }
 }
@@ -382,7 +429,7 @@ fun DrawerContent(
                     .background(
                         color = if (currentRoute == item.route) Color.LightGray else Color.Transparent
                     )
-                    .padding(vertical = 20.dp, horizontal = 8.dp),
+                    .padding(vertical = 20.dp, horizontal = 16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
