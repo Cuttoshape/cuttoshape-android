@@ -7,6 +7,7 @@ import com.example.cuttoshapenew.apiclients.RetrofitClient
 import com.example.cuttoshapenew.apiclients.CartItemResponse
 import com.example.cuttoshapenew.utils.DataStoreManager
 import dagger.hilt.android.qualifiers.ApplicationContext
+import com.stripe.android.paymentsheet.PaymentSheetResult
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.flow.first
@@ -16,6 +17,7 @@ import com.example.cuttoshapenew.apiclients.PaymentIntentRequest
 import com.example.cuttoshapenew.apiclients.PaymentIntentResponse
 import com.example.cuttoshapenew.apiclients.ShipAddressRequest
 import com.example.cuttoshapenew.apiclients.ShippingAddress
+import com.stripe.android.paymentsheet.PaymentSheetResultCallback
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -118,6 +120,35 @@ class CartViewModel @Inject constructor(
         }
     }
 
+    fun onPaymentSheetResult(paymentSheetResult: PaymentSheetResult, paymentRequest : PaymentIntentRequest, onDismissCheckout: () -> Unit) {
+        when (paymentSheetResult) {
+            is PaymentSheetResult.Completed -> {
+
+                viewModelScope.launch {
+                    try {
+                        var resp = RetrofitClient.getClient(context).createPaymentSuccess(paymentRequest)
+                        Log.d("response", resp.toString())
+                    } catch (e: Throwable) {
+                        // Optional: log
+                        Log.e("PaymentAPI", "Error creating payment success", e)
+                    }
+                    onDismissCheckout()
+
+                    fetchCartItems()
+
+                }
+                //_paymentStatus.value = PaymentResultStatus.Success
+                // Update other variables here based on success
+            }
+            is PaymentSheetResult.Canceled -> {
+                //_paymentStatus.value = PaymentResultStatus.Canceled
+            }
+            is PaymentSheetResult.Failed -> {
+                //_paymentStatus.value = PaymentResultStatus.Failed(paymentSheetResult.error)
+            }
+        }
+    }
+
     suspend fun removeCartItem(item: CartItemResponse) {
         try {
             val response = RetrofitClient.getClient(context).deleteCartItem(item.id)
@@ -131,4 +162,6 @@ class CartViewModel @Inject constructor(
             _errorMessage.value = "Failed to delete item: ${e.message}"
         }
     }
+
+
 }

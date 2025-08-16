@@ -557,6 +557,9 @@ interface ApiService {
     @POST("payment-sheet-intent")
     suspend fun getPaymentIntent(@Body paymentIntent: PaymentIntentRequest): PaymentIntentResponse
 
+    @POST("post-payment-success")
+    suspend fun createPaymentSuccess(@Body paymentIntent: PaymentIntentRequest): PaymentIntentResponse
+
     @GET("message/by-user-id")
     suspend fun getUserMessageChat(@Query("senderId") senderId: String, @Query("receiverId") receiverId: String, @Query("page") page: String, @Query("size") size: String ): ChatResponse
 }

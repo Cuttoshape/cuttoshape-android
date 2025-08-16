@@ -89,9 +89,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp) // Add this line
     implementation(libs.logging.interceptor.v4120)
-    implementation(libs.stripe.android)
-    // Include the financial connections SDK to support US bank account as a payment method
-    implementation(libs.financial.connections)
+    implementation("com.stripe:stripe-android:20.47.0")
+    implementation("com.stripe:financial-connections:20.47.0")
 
 
 }

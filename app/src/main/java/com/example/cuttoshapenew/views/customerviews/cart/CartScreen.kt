@@ -27,6 +27,7 @@ import com.stripe.android.paymentsheet.PaymentSheet
 import com.stripe.android.paymentsheet.PaymentSheetResult
 import com.example.cuttoshapenew.utils.DataStoreManager
 import com.stripe.android.PaymentConfiguration
+import com.stripe.android.paymentsheet.rememberPaymentSheet
 import kotlinx.coroutines.flow.first
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -45,10 +46,22 @@ fun CartScreen(navController: NavController) {
     var showCheckout by remember { mutableStateOf(false) }
     var checkoutSheetState = rememberModalBottomSheetState()
     var showPaymentModal by remember { mutableStateOf(false) }
+    val isPaymentSuccessful = remember { mutableStateOf(false) }
     var paymentSheetState = rememberModalBottomSheetState()
     var showNewShipModal by remember { mutableStateOf(false) }
     var newShipSheetState = rememberModalBottomSheetState()
-    val paymentSheet = remember { PaymentSheet.Builder(::onPaymentSheetResult) }.build()
+    var userId by remember { mutableStateOf<String?>(null) }
+    //val paymentSheet = remember { PaymentSheet.Builder(::onPaymentSheetResult) }.build()
+    val paymentIntents = PaymentIntentRequest(
+        cartItems = cartItems,
+        userId = userId.toString(),
+        shipping_options = "SELF"
+    )
+    val paymentSheet = rememberPaymentSheet { result ->
+        viewModel.onPaymentSheetResult(result, paymentIntents){
+            showCheckout = false
+        }
+    }
     var customerConfig by remember { mutableStateOf<PaymentSheet.CustomerConfiguration?>(null) }
     var paymentIntentClientSecret by remember { mutableStateOf<String?>(null) }
 
@@ -56,7 +69,7 @@ fun CartScreen(navController: NavController) {
         scope.launch {
             viewModel.fetchCartItems()
             viewModel.fetchShipAddress()
-            val userId = DataStoreManager.getUserId(context).first()
+            userId = DataStoreManager.getUserId(context).first()
             val paymentIntents = PaymentIntentRequest(
                 cartItems = cartItems,
                 userId = userId.toString(),
@@ -798,20 +811,20 @@ fun CartScreen(navController: NavController) {
     }
 }
 
-private fun onPaymentSheetResult(paymentSheetResult: PaymentSheetResult) {
-    when(paymentSheetResult) {
-        is PaymentSheetResult.Canceled -> {
-            print("Canceled")
-        }
-        is PaymentSheetResult.Failed -> {
-            print("Error: ${paymentSheetResult.error}")
-        }
-        is PaymentSheetResult.Completed -> {
-            // Display for example, an order confirmation screen
-            print("Completed")
-        }
-    }
-}
+//private fun onPaymentSheetResult(paymentSheetResult: PaymentSheetResult) {
+//    when(paymentSheetResult) {
+//        is PaymentSheetResult.Canceled -> {
+//            print("Canceled")
+//        }
+//        is PaymentSheetResult.Failed -> {
+//            print("Error: ${paymentSheetResult.error}")
+//        }
+//        is PaymentSheetResult.Completed -> {
+//            // Display for example, an order confirmation screen
+//            print("Completed")
+//        }
+//    }
+//}
 
 private fun presentPaymentSheet(
     paymentSheet: PaymentSheet,
