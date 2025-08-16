@@ -75,7 +75,9 @@ fun CartScreen(navController: NavController) {
                 userId = userId.toString(),
                 shipping_options = "SELF"
             )
-            viewModel.createPaymentIntent(paymentIntents)
+            if(!cartItems.isEmpty()) {
+                viewModel.createPaymentIntent(paymentIntents)
+            }
         }
     }
 
