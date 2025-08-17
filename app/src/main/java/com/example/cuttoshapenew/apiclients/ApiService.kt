@@ -300,7 +300,8 @@ data class Order(
     val buyerName: String,
     val itemCount: Int,
     val status: String,
-    val quotations: List<Quotation>
+    val quotations: List<Quotation>,
+    val shippingAddress: ShippingAddress1
 )
 
 data class OrderFilterRequest(
@@ -342,7 +343,7 @@ data class Quotation(
     val cost: Int,
     val status: String,
     val configurations: Map<String, String>,
-    val userData: Any?,
+    val userData: UserData,
     val createdAt: String,
     val updatedAt: String,
     val shippingDetails: ShippingAddress?,
@@ -399,6 +400,22 @@ data class ShippingAddress(
     val id : String,
     val userId : String,
     val address : String,
+    val city : String,
+    val state : String,
+    val zipCode : String,
+    val country : String,
+    val createdAt : String,
+    val createdBy : String,
+    val updatedAt : String,
+    val updatedBy : String,
+    val deletedAt : String,
+    val deletedBy : String
+)
+
+data class ShippingAddress1(
+    val id : String,
+    val userId : String,
+    val addressLine1 : String,
     val city : String,
     val state : String,
     val zipCode : String,

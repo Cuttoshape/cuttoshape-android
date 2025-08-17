@@ -32,7 +32,6 @@ import androidx.navigation.NavController
 import coil.compose.AsyncImage
 import com.example.cuttoshapenew.apiclients.Order
 import com.example.cuttoshapenew.apiclients.Quotation
-import com.example.cuttoshapenew.views.customerviews.order.OrderDetailsViewModel
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 

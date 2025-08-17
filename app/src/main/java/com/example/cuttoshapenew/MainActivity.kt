@@ -299,10 +299,10 @@ fun TailoringAppContent(
                 composable("quotation") {
                     TailorOrderScreen( navController)
                 }
-                composable("orderDetails/{orderId}/{buyerId}") { backStackEntry ->
+                composable("orderDetails/tailor/{orderId}/{sellerId}") { backStackEntry ->
                     val orderId = backStackEntry.arguments?.getString("orderId")?.toIntOrNull() ?: 0
-                    val buyerId = backStackEntry.arguments?.getString("buyerId")?.toIntOrNull() ?: 0
-                    TailorOrderDetailsScreen(navController, orderId, buyerId)
+                    val sellerId = backStackEntry.arguments?.getString("sellerId")?.toIntOrNull() ?: 0
+                    TailorOrderDetailsScreen(navController, orderId, sellerId)
                 }
                 composable("message") {
                     MessageListScreen(navController = navController, userId = userId)

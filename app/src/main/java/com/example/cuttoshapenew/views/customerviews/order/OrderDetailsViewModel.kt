@@ -1,6 +1,7 @@
 package com.example.cuttoshapenew.views.customerviews.order
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
@@ -30,6 +31,7 @@ class OrderDetailsViewModel @Inject constructor(
     fun fetchOrderDetails(orderId: Int, buyerId: Int) {
         viewModelScope.launch {
             _isLoading.value = true
+            Log.d("Got here", "I am")
             try {
                 val request = OrderFilterRequest(
                     isDetail = true,

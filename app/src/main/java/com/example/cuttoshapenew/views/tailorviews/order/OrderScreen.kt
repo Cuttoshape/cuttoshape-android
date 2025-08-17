@@ -47,7 +47,7 @@ fun TailorOrderScreen(navController: NavController, viewModel: OrderViewModel = 
                 LazyColumn(modifier = Modifier.weight(1f)) {
                     items(ordersState.value) { order ->
                         OrderCard(order = order, onClick = {
-                            navController.navigate("orderDetails/${order.id}/${userId}")
+                            navController.navigate("orderDetails/tailor/${order.id}/${userId}")
                         })
                     }
                 }
