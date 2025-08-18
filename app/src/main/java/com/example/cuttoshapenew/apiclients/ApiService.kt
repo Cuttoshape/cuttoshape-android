@@ -346,7 +346,7 @@ data class Quotation(
     val userData: UserData,
     val createdAt: String,
     val updatedAt: String,
-    val shippingDetails: ShippingAddress?,
+    val shippingDetails: Any?,
     val shippingCost: Int
 )
 
@@ -503,6 +503,17 @@ data class PaymentIntentResponse(
     val publishableKey: String
 )
 
+data class UpdateQuotationRequest(
+    val id: String,
+    val shippingDetails: String,
+    val status: String,
+    val trackingNumber: String,
+)
+
+data class UpdateQuotationResponse(
+    val message: String
+)
+
 interface ApiService {
     @POST("product/all")
     suspend fun getProducts(@Body request: ProductRequest): ProductResponse
@@ -576,6 +587,9 @@ interface ApiService {
 
     @POST("post-payment-success")
     suspend fun createPaymentSuccess(@Body paymentIntent: PaymentIntentRequest): PaymentIntentResponse
+
+    @PUT("quotation/bulk-update")
+    suspend fun updateQuotation(@Body quotationPayload: List<UpdateQuotationRequest>): UpdateQuotationResponse
 
     @GET("message/by-user-id")
     suspend fun getUserMessageChat(@Query("senderId") senderId: String, @Query("receiverId") receiverId: String, @Query("page") page: String, @Query("size") size: String ): ChatResponse

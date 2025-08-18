@@ -47,6 +47,14 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.ui.window.Dialog
 import com.example.cuttoshapenew.apiclients.UserData
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.material3.RadioButton
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.semantics.Role
+import com.example.cuttoshapenew.apiclients.UpdateQuotationRequest
+import kotlinx.coroutines.launch
 
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -61,6 +69,7 @@ fun TailorOrderDetailsScreen(
     val isLoading = viewModel.isLoading.observeAsState(false)
     val error = viewModel.error.observeAsState(null)
     val buttonColor = Color(0xFF4A90E2)
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(orderId, buyerId) {
         viewModel.fetchOrderDetails(orderId, buyerId)
@@ -189,8 +198,21 @@ fun TailorOrderDetailsScreen(
                         modifier = Modifier.padding(top = 16.dp)
                     )
                     LazyColumn {
-                        items(order.value!!.quotations) { quotation ->
-                            OrderItemCard(quotation)
+                        items(order.value!!.quotations) { q ->
+                            OrderItemCard(
+                                quotation = q,
+                                onSubmitStatus = { newStatus ->
+                                    scope.launch {
+                                        val req = UpdateQuotationRequest(
+                                            id = q.id.toString(),        // ensure String
+                                            shippingDetails = "",        // per your requirement
+                                            status = newStatus,
+                                            trackingNumber = ""          // per your requirement
+                                        )
+                                        viewModel.updateQuotation(listOf(req))
+                                    }
+                                }
+                            )
                         }
                     }
                 }
@@ -219,7 +241,7 @@ fun TailorOrderDetailsScreen(
 }
 
 @Composable
-fun OrderItemCard(quotation: Quotation) {
+fun OrderItemCard(quotation: Quotation, onSubmitStatus: (String) -> Unit) {
 
     var showMeasurementDialog by rememberSaveable { mutableStateOf(false) }
     var showStatusDialog by rememberSaveable { mutableStateOf(false) }
@@ -276,29 +298,42 @@ fun OrderItemCard(quotation: Quotation) {
                 Button(
                     onClick = { showStatusDialog = true },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFAE51E6)),
-                    //                    modifier = Modifier.align(Alignment.CenterVertically)
-                ) {
-                    Text("Status", color = Color.White, fontSize = 12.sp)
+                ) { Text("Status", color = Color.White, fontSize = 12.sp) }
+
+                if (showStatusDialog) {
+                    StatusDialog(
+                        currentStatus = quotation.status,
+                        onSubmit = { chosen ->
+                            onSubmitStatus(chosen)        // send chosen status upward
+                            showStatusDialog = false      // close after submit
+                        },
+                        onDismiss = { showStatusDialog = false }
+                    )
+                }
+
+                if (showMeasurementDialog) {
+                    MeasurementDialog(quotation.userData) { showMeasurementDialog = false }
                 }
             }
 
         }
     }
 
-    if(showMeasurementDialog){
-        MeasurementDialog(
-            quotation.userData,
-            onDismiss = { showMeasurementDialog = false }
-        )
-
-    }
-
-    if(showStatusDialog){
-        StatusDialog(
-            onDismiss = { showStatusDialog = false }
-        )
-
-    }
+//    if(showMeasurementDialog){
+//        MeasurementDialog(
+//            quotation.userData,
+//            onDismiss = { showMeasurementDialog = false }
+//        )
+//
+//    }
+//
+//    if(showStatusDialog){
+//        StatusDialog(
+//            quotation.status,
+//            onDismiss = { showStatusDialog = false }
+//        )
+//
+//    }
 }
 
 @RequiresApi(Build.VERSION_CODES.O)
@@ -493,70 +528,43 @@ fun MeasurementDialog(
 
 @Composable
 fun StatusDialog(
+    currentStatus: String,
+    onSubmit: (String) -> Unit,
     onDismiss: () -> Unit
 ) {
+    val buttonColor = Color(0xFF4A90E2)
+    var selected by rememberSaveable { mutableStateOf(currentStatus) } // local state
+
     Dialog(onDismissRequest = onDismiss) {
-        // Outer surface to get rounded corners and white sheet look
         Card(
             shape = RoundedCornerShape(20.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 8.dp),
             colors = CardDefaults.cardColors(containerColor = Color(0xFFF2F2F5)),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 12.dp)
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp)
         ) {
-            Column(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
-
-                // Header: centered title with close button on the right
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(0xFFFFFFFF))
-                        .padding(vertical = 14.dp, horizontal = 12.dp)
-                ) {
-                    Text(
-                        "Update Item Status",
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                    IconButton(
-                        onClick = onDismiss,
-                        modifier = Modifier.align(Alignment.CenterEnd)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Close,
-                            contentDescription = "Close"
-                        )
-                    }
-                }
-
-                // Inner white card with the fields
+            Column(Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
+                // header ...
                 Card(
-                    modifier = Modifier
-                        .padding(horizontal = 16.dp, vertical = 16.dp)
-                        .fillMaxWidth(),
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp).fillMaxWidth(),
                     colors = CardDefaults.cardColors(containerColor = Color.White),
                     shape = RoundedCornerShape(16.dp),
                     elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
-                    Column(modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                        Text(
-                            "SELECT STATUS",
-                            fontSize = 18.sp,
-                            fontWeight = FontWeight.Bold,
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
+                    Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                        Text("SELECT STATUS", fontSize = 18.sp, fontWeight = FontWeight.Bold)
 
-                        LabeledRow("Created", "")
-                        Divider()
-                        LabeledRow("Reviewed", "")
-                        Divider()
-                        LabeledRow("Completed", "")
-                        Divider()
-                        LabeledRow("Shipped", "")
-                        Divider()
-                        LabeledRow("Delivered", "")
+                        val options = listOf("Created", "Reviewed", "Completed", "Shipped", "Delivered")
+                        RadioGroup(options = options, initial = currentStatus) { chosen ->
+                            selected = chosen
+                        }
+
+                        Spacer(Modifier.height(12.dp))
+                        Button(
+                            onClick = { onSubmit(selected) },
+                            colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
+                        ) {
+                            Text("Submit", color = Color.White, fontSize = 12.sp)
+                        }
                     }
                 }
             }
@@ -571,5 +579,40 @@ private fun LabeledRow(label: String, value: String) {
             text = "$label: $value",
             fontSize = 16.sp
         )
+    }
+}
+
+@Composable
+fun <T> RadioGroup(
+    options: List<T>,
+    label: (T) -> String = { it.toString() },
+    modifier: Modifier = Modifier,
+    initial: T = options.first(),
+    onSelected: (T) -> Unit = {}
+) {
+    var selected by rememberSaveable { mutableStateOf(initial) }
+
+    Column(modifier.selectableGroup()) {
+        options.forEach { option ->
+            val isSelected = option == selected
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .selectable(
+                        selected = isSelected,
+                        onClick = {
+                            selected = option
+                            onSelected(option)
+                        },
+                        role = Role.RadioButton
+                    )
+                    .padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                RadioButton(selected = isSelected, onClick = null) // Row handles clicks
+                Spacer(Modifier.width(8.dp))
+                Text(label(option))
+            }
+        }
     }
 }

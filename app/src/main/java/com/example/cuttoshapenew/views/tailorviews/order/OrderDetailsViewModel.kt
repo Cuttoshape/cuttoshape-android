@@ -10,6 +10,7 @@ import com.example.cuttoshapenew.apiclients.Order
 import com.example.cuttoshapenew.apiclients.OrderFilterRequest
 import com.example.cuttoshapenew.apiclients.Filter
 import com.example.cuttoshapenew.apiclients.RetrofitClient
+import com.example.cuttoshapenew.apiclients.UpdateQuotationRequest
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.launch
@@ -48,6 +49,21 @@ class OrderDetailsViewModel @Inject constructor(
             } finally {
                 _isLoading.value = false
             }
+        }
+    }
+
+    internal suspend fun updateQuotation( quotationPayload: List<UpdateQuotationRequest>) {
+        _isLoading.value = true
+        _error.value = null
+
+        try {
+            val response = RetrofitClient.getClient(context).updateQuotation(quotationPayload)
+            Log.d("Response", response.toString())
+
+        } catch (e: Exception) {
+            _error.value = "Failed to update Quotation: ${e.message}"
+        } finally {
+            _isLoading.value = false
         }
     }
 }
