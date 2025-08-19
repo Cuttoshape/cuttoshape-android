@@ -52,6 +52,8 @@ import com.example.cuttoshapenew.views.tailorviews.order.TailorOrderDetailsScree
 import com.example.cuttoshapenew.views.customerviews.measurement.MeasurementModal
 import com.example.cuttoshapenew.views.tailorviews.Chat.ChatScreen
 import com.example.cuttoshapenew.views.tailorviews.Chat.MessageListScreen
+import com.example.cuttoshapenew.views.customerviews.Chat.CustomerChatScreen
+import com.example.cuttoshapenew.views.customerviews.Chat.CustomerMessageListScreen
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
@@ -307,9 +309,16 @@ fun TailoringAppContent(
                 composable("message") {
                     MessageListScreen(navController = navController, userId = userId)
                 }
-                composable("chat_screen/{receiverId}") { backStackEntry ->
+                composable("chat") {
+                    CustomerMessageListScreen(navController = navController, userId = userId)
+                }
+                composable("chat_screen/tailor/{receiverId}") { backStackEntry ->
                     val receiverId = backStackEntry.arguments?.getString("receiverId") ?: ""
                     ChatScreen(receiverId = receiverId, userId = userId)
+                }
+                composable("chat_screen/{receiverId}") { backStackEntry ->
+                    val receiverId = backStackEntry.arguments?.getString("receiverId") ?: ""
+                    CustomerChatScreen(receiverId = receiverId, userId = userId)
                 }
                 composable("transaction") {
                     Text("Transactions Screen", modifier = Modifier.fillMaxSize(), textAlign = TextAlign.Center)
