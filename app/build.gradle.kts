@@ -16,7 +16,9 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
-
+        multiDexEnabled = true
+        vectorDrawables.useSupportLibrary = true
+        setProperty("archivesBaseName", "vision-quickstart")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -91,6 +93,31 @@ dependencies {
     implementation(libs.logging.interceptor.v4120)
     implementation("com.stripe:stripe-android:20.47.0")
     implementation("com.stripe:financial-connections:20.47.0")
+
+    // CameraX stable (no SNAPSHOTs)
+    implementation("androidx.camera:camera-camera2:1.4.0")
+    implementation("androidx.camera:camera-lifecycle:1.4.0")
+    implementation("androidx.camera:camera-view:1.4.0")
+// Your ML Kit deps can stay as-is for now
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
+    implementation("com.google.mlkit:object-detection:17.0.2")
+    implementation("com.google.mlkit:object-detection-custom:17.0.2")
+    implementation("com.google.mlkit:face-detection:16.1.7")
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("com.google.mlkit:text-recognition-chinese:16.0.1")
+    implementation("com.google.mlkit:text-recognition-devanagari:16.0.1")
+    implementation("com.google.mlkit:text-recognition-japanese:16.0.1")
+    implementation("com.google.mlkit:text-recognition-korean:16.0.1")
+    implementation("com.google.mlkit:image-labeling:17.0.9")
+    implementation("com.google.mlkit:image-labeling-custom:17.0.3")
+    implementation("com.google.mlkit:pose-detection:18.0.0-beta5")
+    implementation("com.google.mlkit:pose-detection-accurate:18.0.0-beta5")
+    implementation("com.google.mlkit:segmentation-selfie:16.0.0-beta6")
+    implementation("com.google.mlkit:camera:16.0.0-beta3")
+    implementation("com.google.mlkit:face-mesh-detection:16.0.0-beta3")
+    implementation("com.google.android.gms:play-services-mlkit-subject-segmentation:16.0.0-beta1")
+    implementation("com.google.code.gson:gson:2.8.6")
+    implementation("com.google.guava:guava:27.1-android")
 
 
 }
