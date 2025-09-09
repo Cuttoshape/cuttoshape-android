@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
+
+    <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
         android:maxSdkVersion="32"
@@ -31,6 +37,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".EntryChoiceActivity"
+            android:exported="true"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name=".java.ChooserActivity"
+            android:exported="false"
+            android:theme="@style/AppTheme" />
+        <activity android:name=".java.LivePreviewActivity" android:exported="false" android:theme="@style/AppTheme"/>
+        <activity android:name=".java.CameraXLivePreviewActivity" android:exported="false" android:theme="@style/AppTheme"/>
+        <activity android:name=".java.CameraXSourceDemoActivity" android:exported="false" android:theme="@style/AppTheme"/>
+        <activity android:name=".java.StillImageActivity" android:exported="false" android:theme="@style/AppTheme"/>
+
+        <activity android:name=".kotlin.ChooserActivity" android:exported="false" android:theme="@style/AppTheme"/>
+        <activity android:name=".kotlin.LivePreviewActivity" android:exported="false" android:theme="@style/AppTheme"/>
+        <activity android:name=".kotlin.CameraXLivePreviewActivity" android:exported="false" android:theme="@style/AppTheme"/>
+        <activity android:name=".kotlin.CameraXSourceDemoActivity" android:exported="false" android:theme="@style/AppTheme"/>
+        <activity android:name=".kotlin.StillImageActivity" android:exported="false" android:theme="@style/AppTheme"/>
+
+        <activity android:name=".preference.SettingsActivity" android:exported="false"/>
     </application>
 
 </manifest>

@@ -42,6 +42,8 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.cuttoshapenew.apiclients.Data
+import android.content.Intent
+import com.example.cuttoshapenew.EntryChoiceActivity
 import com.example.cuttoshapenew.apiclients.RetrofitClient
 import com.example.cuttoshapenew.apiclients.Measurement
 import com.example.cuttoshapenew.apiclients.MeasurementRequest
@@ -134,6 +136,21 @@ fun MeasurementModal(
                     colors = ButtonDefaults.buttonColors(containerColor = buttonColor)
                 ) {
                     Text("Add New", color = Color.White)
+                }
+
+                Button(
+                    onClick = {
+                        val intent = Intent(context, EntryChoiceActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    modifier = Modifier
+                        .height(50.dp)
+                        .align(Alignment.CenterHorizontally)
+                        .padding(top = 8.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF00C853)) // green color for scan
+                ) {
+                    Text("Scan", color = Color.White)
                 }
             }
 
